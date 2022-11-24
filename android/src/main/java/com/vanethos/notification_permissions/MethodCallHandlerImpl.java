@@ -11,6 +11,7 @@ import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import io.flutter.plugin.common.MethodCall;
@@ -55,11 +56,13 @@ public class MethodCallHandlerImpl implements MethodCallHandler, PluginRegistry.
         }
 
         // Since TIRAMISU (API level 33) POST_NOTIFICATIONS permission can be requested
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          permissionRequestResult = result;
-          activity.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE);
-          return;
-        }
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                  // If we are not allowed to show the permission dialog we just fallback to old flow
+                  && !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.POST_NOTIFICATIONS)) {
+              permissionRequestResult = result;
+              activity.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE);
+              return;
+          }
 
         // https://stackoverflow.com/a/45192258
         final Intent intent = new Intent();
